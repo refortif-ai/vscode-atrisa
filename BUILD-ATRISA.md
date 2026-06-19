@@ -72,6 +72,26 @@ extension-gallery/management code paths deref `product.defaultChatAgent.extensio
 *without* a null guard — removing it crashes extension browse/install. With the
 extension gone and the modal disabled, there is no functional or visible Copilot.
 
+## Workspace Trust (why the baked-in extension "disappears")
+
+The Atrisa extension declares no `capabilities.untrustedWorkspaces`, so under
+VS Code **Workspace Trust** an untrusted folder opens in **Restricted Mode** and
+the extension is **disabled** — the activity-bar icon and `.sch` custom editor
+silently vanish. A Spotlight/Finder `open` of a folder starts untrusted, so the
+baked-in extension appears "missing" even though it is on disk and valid.
+(Launches with `--disable-workspace-trust`, as used in dev/testing, hide this.)
+
+Fix baked into the distro: `security.workspace.trust.enabled` default is flipped
+to `false` (`workspace.contribution.ts`) — no Restricted Mode, so the extension
+always loads on any opened folder. Appropriate for a single-purpose IDE.
+
+> Stale built-in cache gotcha: VS Code caches the per-profile built-in extension
+> list keyed on the product build identity, not on the `extensions/` directory.
+> Baking a new built-in into an app a user has already launched can leave it
+> hidden until the cache is cleared. `bake-atrisa-extension.sh` now deletes
+> `~/Library/Application Support/Atrisa/CachedProfilesData/*/extensions.*.cache`
+> after installing, so a re-bake is always picked up.
+
 ## Prerequisites
 
 - Node **24.15.0** (see `.nvmrc`): `nvm install 24.15.0 && nvm use 24.15.0`

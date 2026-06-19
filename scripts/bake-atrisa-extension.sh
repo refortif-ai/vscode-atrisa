@@ -36,4 +36,20 @@ rm -rf "$DEST"
 cp -R "$TMP/extension" "$DEST"
 
 echo "Done. Baked-in extension size: $(du -sh "$DEST" | cut -f1)"
+
+# Invalidate any stale built-in extension scan caches in already-created user
+# profiles. VS Code caches the built-in extension list per profile and keys it
+# on the product build identity (commit/date), NOT on the extensions/ directory
+# contents — so baking a new built-in into an app the user has already launched
+# leaves the extension invisible until its cache is cleared. Without this, a
+# Spotlight/Finder launch (default profile) would not show the freshly-baked
+# extension even though it is on disk. Throwaway --user-data-dir launches are
+# unaffected, which is why it only bites real launches.
+NAME_LONG="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleName' "$APP/Contents/Info.plist" 2>/dev/null || echo Atrisa)"
+PROFILES="$HOME/Library/Application Support/$NAME_LONG/CachedProfilesData"
+if [ -d "$PROFILES" ]; then
+  cleared=$(find "$PROFILES" -maxdepth 2 -name 'extensions.*.cache' -delete -print 2>/dev/null | wc -l | tr -d ' ')
+  echo "Cleared $cleared stale built-in extension cache file(s) under $PROFILES"
+fi
+
 echo "Launch: \"$APP/Contents/MacOS/Atrisa\""
