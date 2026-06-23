@@ -102,7 +102,12 @@ export class EditorGroupWatermark extends Disposable {
 			h('.editor-group-watermark-toolbar-container@toolbarContainer'),
 			h('.editor-group-watermark', [
 				h('.watermark-container', [
-					h('.letterpress'),
+					h('.atrisa-lockup', [
+						h('.letterpress', { role: 'img', ariaLabel: localize('watermark.atrisaLogo', "Atrisa") }),
+						h('.atrisa-wordmark', [
+							localize('watermark.atrisaName', "Atrisa")
+						]),
+					]),
 					h('.shortcuts@shortcuts'),
 				])
 			])
